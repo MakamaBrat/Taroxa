@@ -129,6 +129,25 @@
 
       document.body.appendChild(script);
 
+
+mergeInto(LibraryManager.library, {
+  OpenInvoice: function(invoiceLink) {
+    var link = UTF8ToString(invoiceLink);
+    
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.openInvoice(link, function(status) {
+        if (typeof unityInstance !== 'undefined') {
+          if (status === 'paid') {
+            unityInstance.SendMessage('PaymentManager', 'OnPaymentSuccess');
+          } else {
+            unityInstance.SendMessage('PaymentManager', 'OnPaymentFailed');
+          }
+        }
+      });
+    }
+  }
+});
+
     </script>
   </body>
 </html>
