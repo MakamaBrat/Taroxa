@@ -136,14 +136,20 @@
                   unityInstance.SetFullscreen(1);
                 };
 
-                // Позволяем на ПК выходить из полноэкранного режима по клавише Esc
-                // (в браузере это обычно происходит само, но дублируем через Unity API
-                // на случай, если игра сама включает fullscreen через SetFullscreen(1)).
+                // Переключение между полноэкранным (растянутым на весь экран)
+                // и обычным размером canvas по клавише Esc — актуально для ПК,
+                // так как growth на весь экран у нас не через Fullscreen API,
+                // а через CSS-классы unity-mobile/unity-desktop.
                 document.addEventListener("keydown", (e) => {
                   if (e.key === "Escape") {
-                    unityInstance.SetFullscreen(0);
-                    if (document.fullscreenElement && document.exitFullscreen) {
-                      document.exitFullscreen();
+                    var isStretched = document.querySelector("#unity-container").classList.contains("unity-mobile");
+                    var container = document.querySelector("#unity-container");
+                    if (isStretched) {
+                      container.className = "unity-desktop";
+                      canvas.className = "";
+                    } else {
+                      container.className = "unity-mobile";
+                      canvas.className = "unity-mobile";
                     }
                   }
                 });
