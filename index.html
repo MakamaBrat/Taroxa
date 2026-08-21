@@ -136,14 +136,21 @@
                   unityInstance.SetFullscreen(1);
                 };
 
-                // Переключение между полноэкранным (растянутым на весь экран)
-                // и обычным размером canvas по клавише Esc — актуально для ПК,
-                // так как growth на весь экран у нас не через Fullscreen API,
-                // а через CSS-классы unity-mobile/unity-desktop.
+                // Переключение fullscreen по Esc.
+                // Слушаем на этапе capture, чтобы Unity-canvas не перехватил
+                // событие раньше нас (canvas сам ловит клавиатуру для игры).
                 document.addEventListener("keydown", (e) => {
-                  if (e.key === "Escape") {
-                    var isStretched = document.querySelector("#unity-container").classList.contains("unity-mobile");
+                  if (e.key === "Escape" || e.key === "Esc") {
+                    if (window.Telegram && window.Telegram.WebApp) {
+                      var tg = window.Telegram.WebApp;
+                      if (tg.isFullscreen) {
+                        tg.exitFullscreen();
+                      } else {
+                        tg.requestFullscreen();
+                      }
+                    }
                     var container = document.querySelector("#unity-container");
+                    var isStretched = container.classList.contains("unity-mobile");
                     if (isStretched) {
                       container.className = "unity-desktop";
                       canvas.className = "";
@@ -152,7 +159,7 @@
                       canvas.className = "unity-mobile";
                     }
                   }
-                });
+                }, true);
 
               }).catch((message) => {
                 alert(message);
