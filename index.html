@@ -136,6 +136,18 @@
                   unityInstance.SetFullscreen(1);
                 };
 
+                // Позволяем на ПК выходить из полноэкранного режима по клавише Esc
+                // (в браузере это обычно происходит само, но дублируем через Unity API
+                // на случай, если игра сама включает fullscreen через SetFullscreen(1)).
+                document.addEventListener("keydown", (e) => {
+                  if (e.key === "Escape") {
+                    unityInstance.SetFullscreen(0);
+                    if (document.fullscreenElement && document.exitFullscreen) {
+                      document.exitFullscreen();
+                    }
+                  }
+                });
+
               }).catch((message) => {
                 alert(message);
               });
