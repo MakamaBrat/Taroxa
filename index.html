@@ -30,6 +30,39 @@
       </div>
     </div>
     <script>
+      // Регистрируем обработчик Esc максимально рано (до загрузки Unity-скрипта),
+      // на window, с capture:true — чтобы перехватить событие раньше, чем это
+      // сделает сам Unity (он тоже вешает свои слушатели клавиатуры на window).
+      window.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" || e.key === "Esc" || e.keyCode === 27) {
+          console.log("[fullscreen-toggle] Escape pressed");
+          if (window.Telegram && window.Telegram.WebApp) {
+            var tgw = window.Telegram.WebApp;
+            console.log("[fullscreen-toggle] tg.isFullscreen =", tgw.isFullscreen);
+            try {
+              if (tgw.isFullscreen) {
+                tgw.exitFullscreen();
+              } else {
+                tgw.requestFullscreen();
+              }
+            } catch (err) {
+              console.log("[fullscreen-toggle] wrapper call failed, trying postEvent", err);
+            }
+            // Fallback напрямую через postEvent, в обход telegram-web-app.js,
+            // на случай если версия клиента не поддерживает обёртку.
+            if (tgw.postEvent) {
+              try {
+                tgw.postEvent(tgw.isFullscreen ? "web_app_exit_fullscreen" : "web_app_request_fullscreen");
+              } catch (err) {
+                console.log("[fullscreen-toggle] postEvent failed", err);
+              }
+            }
+          } else {
+            console.log("[fullscreen-toggle] window.Telegram.WebApp not found");
+          }
+        }
+      }, true);
+
       // Разворачиваем Telegram Mini App на весь экран как можно раньше
       if (window.Telegram && window.Telegram.WebApp) {
         var tg = window.Telegram.WebApp;
@@ -135,31 +168,6 @@
                 document.querySelector("#unity-fullscreen-button").onclick = () => {
                   unityInstance.SetFullscreen(1);
                 };
-
-                // Переключение fullscreen по Esc.
-                // Слушаем на этапе capture, чтобы Unity-canvas не перехватил
-                // событие раньше нас (canvas сам ловит клавиатуру для игры).
-                document.addEventListener("keydown", (e) => {
-                  if (e.key === "Escape" || e.key === "Esc") {
-                    if (window.Telegram && window.Telegram.WebApp) {
-                      var tg = window.Telegram.WebApp;
-                      if (tg.isFullscreen) {
-                        tg.exitFullscreen();
-                      } else {
-                        tg.requestFullscreen();
-                      }
-                    }
-                    var container = document.querySelector("#unity-container");
-                    var isStretched = container.classList.contains("unity-mobile");
-                    if (isStretched) {
-                      container.className = "unity-desktop";
-                      canvas.className = "";
-                    } else {
-                      container.className = "unity-mobile";
-                      canvas.className = "unity-mobile";
-                    }
-                  }
-                }, true);
 
               }).catch((message) => {
                 alert(message);
